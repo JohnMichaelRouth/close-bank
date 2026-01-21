@@ -23,9 +23,16 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
 	testImplementation 'junit:junit:4.12'
-	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
+	testImplementation(group: 'net.runelite', name:'client', version: runeLiteVersion) {
+		exclude group: 'org.lwjgl'
+	}
+	testImplementation group: 'org.lwjgl', name: 'lwjgl', version: '3.3.2'
+	testImplementation group: 'org.lwjgl', name: 'lwjgl-opengl', version: '3.3.2'
+	testImplementation group: 'org.lwjgl', name: 'lwjgl', version: '3.3.2', classifier: 'natives-windows'
+	testImplementation group: 'org.lwjgl', name: 'lwjgl-opengl', version: '3.3.2', classifier: 'natives-windows'
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
 }
+
 
 group = 'com.example'
 version = '1.0-SNAPSHOT'
