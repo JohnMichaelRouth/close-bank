@@ -4,12 +4,16 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.MenuAction;
 import net.runelite.api.ScriptID;
+import net.runelite.api.WidgetNode;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetConfig;
 import net.runelite.api.widgets.WidgetPositionMode;
 import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.callback.ClientThread;
@@ -43,14 +47,12 @@ public class CloseBankPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.debug("Close Bank started!");
 		spriteManager.addSpriteOverrides(CloseBank.values());
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		log.debug("Close Bank stopped!");
 		spriteManager.removeSpriteOverrides(CloseBank.values());
 		if (closeButton != null)
 		{
@@ -73,6 +75,35 @@ public class CloseBankPlugin extends Plugin
 		if (event.getScriptId() == ScriptID.BANKMAIN_BUILD)
 		{
 			clientThread.invokeLater(this::updateButton);
+		}
+	}
+
+	@Subscribe
+	public void onMenuOptionClicked(MenuOptionClicked event)
+	{
+		if (event.getMenuOption().equals("Close Bank"))
+		{
+			closeBank();
+			event.consume();
+		}
+	}
+
+	private void closeBank()
+	{
+		try
+		{
+			for (WidgetNode node : client.getComponentTable())
+			{
+				if (node.getId() == InterfaceID.BANK)
+				{
+					client.closeInterface(node, false);
+					return;
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			log.error("Error closing bank", e);
 		}
 	}
 
@@ -111,14 +142,14 @@ public class CloseBankPlugin extends Plugin
 		closeButton.setOriginalX(434);
 		closeButton.setOriginalY(45);
 		closeButton.setSpriteId(CloseBank.CLOSE_BUTTON.getSpriteId());
-		closeButton.setNoClickThrough(true);
+
+		// Enable clicking - set click mask to enable action 0
+		closeButton.setClickMask(WidgetConfig.transmitAction(0));
 
 		// Set action
 		closeButton.setAction(0, "Close Bank");
 		closeButton.setHasListener(true);
 		closeButton.revalidate();
-
-		log.debug("Close bank button created");
 	}
 
 	@Provides
