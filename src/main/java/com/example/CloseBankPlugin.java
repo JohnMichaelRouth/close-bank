@@ -138,11 +138,14 @@ public class CloseBankPlugin extends Plugin
 			{
 				if (dynamicChild == closeButton)
 				{
-					// Reposition the existing button in case parent size has changed
+					// Button exists, ensure it's visible
+					closeButton.setHidden(false);
 					repositionButton();
 					return;
 				}
 			}
+			// Button reference exists but is not in parent, clear it
+			closeButton = null;
 		}
 
 		// Create new close button
@@ -177,14 +180,38 @@ public class CloseBankPlugin extends Plugin
 			return;
 		}
 
-		// Position button at bottom right with proper spacing
-		// X position: parent width - button width - spacing (increased to avoid scrollbar)
-		int buttonSpacing = 24;
-		int xPos = parent.getWidth() - closeButton.getWidth() - buttonSpacing;
+		// Calculate bottom offset by checking for widgets at the bottom
+		// The incinerator and potion store may move to the bottom in certain resizable sizes
+		int bottomOffset = 39; // Default offset from bottom of BANK_CONTENT_CONTAINER
+
+		Widget incinerator = client.getWidget(net.runelite.api.gameval.InterfaceID.Bankmain.INCINERATOR_TARGET);
+		if (incinerator != null && !incinerator.isHidden())
+		{
+			// Incinerator is visible, calculate offset based on it
+			int incTop = incinerator.getOriginalY();
+			int incHeight = incinerator.getHeight();
+			bottomOffset = Math.max(bottomOffset, incHeight + incTop);
+		}
+
+		Widget potionStore = client.getWidget(net.runelite.api.gameval.InterfaceID.Bankmain.POTIONSTORE_BUTTON);
+		if (potionStore != null && !potionStore.isSelfHidden())
+		{
+			// Potion store is visible, calculate offset based on it
+			int potTop = potionStore.getOriginalY();
+			int potHeight = potionStore.getHeight();
+			bottomOffset = Math.max(bottomOffset, potHeight + potTop);
+		}
+
+		// Add spacing above the bottom widgets
+		int yPositionFromBottom = bottomOffset + 2;
+
+		// Position button at bottom right
+		// X position: right edge with spacing (for ABSOLUTE positioning, calculate from left)
+		int xPos = parent.getWidth() - closeButton.getWidth() - 24;
 		closeButton.setOriginalX(xPos);
 
-		// Y position: 45 pixels from the bottom
-		closeButton.setOriginalY(45);
+		// Y position: using ABSOLUTE_BOTTOM, this is distance from the bottom
+		closeButton.setOriginalY(yPositionFromBottom);
 
 		closeButton.revalidate();
 	}
