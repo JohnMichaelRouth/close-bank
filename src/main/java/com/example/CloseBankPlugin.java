@@ -9,6 +9,7 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.WidgetNode;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.ScriptPostFired;
+import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.InterfaceID;
@@ -79,6 +80,16 @@ public class CloseBankPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onScriptPreFired(ScriptPreFired event)
+	{
+		// Reposition the button when the bank finishes building to ensure correct positioning in resizable mode
+		if (event.getScriptId() == ScriptID.BANKMAIN_FINISHBUILDING)
+		{
+			clientThread.invokeLater(this::updateButton);
+		}
+	}
+
+	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
 		if (event.getMenuOption().equals("Close Bank"))
@@ -127,7 +138,8 @@ public class CloseBankPlugin extends Plugin
 			{
 				if (dynamicChild == closeButton)
 				{
-					closeButton.setHidden(false);
+					// Reposition the existing button in case parent size has changed
+					repositionButton();
 					return;
 				}
 			}
@@ -139,8 +151,6 @@ public class CloseBankPlugin extends Plugin
 		closeButton.setOriginalHeight(18);
 		closeButton.setOriginalWidth(18);
 		closeButton.setYPositionMode(WidgetPositionMode.ABSOLUTE_BOTTOM);
-		closeButton.setOriginalX(434);
-		closeButton.setOriginalY(45);
 		closeButton.setSpriteId(CloseBank.CLOSE_BUTTON.getSpriteId());
 
 		// Enable clicking - set click mask to enable action 0
@@ -149,6 +159,33 @@ public class CloseBankPlugin extends Plugin
 		// Set action
 		closeButton.setAction(0, "Close Bank");
 		closeButton.setHasListener(true);
+
+		// Position the button based on parent dimensions
+		repositionButton();
+	}
+
+	private void repositionButton()
+	{
+		if (closeButton == null)
+		{
+			return;
+		}
+
+		Widget parent = client.getWidget(ComponentID.BANK_CONTENT_CONTAINER);
+		if (parent == null)
+		{
+			return;
+		}
+
+		// Position button at bottom right with proper spacing
+		// X position: parent width - button width - spacing (increased to avoid scrollbar)
+		int buttonSpacing = 24;
+		int xPos = parent.getWidth() - closeButton.getWidth() - buttonSpacing;
+		closeButton.setOriginalX(xPos);
+
+		// Y position: 45 pixels from the bottom
+		closeButton.setOriginalY(45);
+
 		closeButton.revalidate();
 	}
 
