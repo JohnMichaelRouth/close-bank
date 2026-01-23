@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
+import net.runelite.api.ScriptEvent;
 import net.runelite.api.ScriptID;
 import net.runelite.api.SpriteID;
 import net.runelite.api.WidgetNode;
@@ -15,6 +16,7 @@ import net.runelite.api.events.WidgetLoaded;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.InterfaceID;
+import net.runelite.api.widgets.JavaScriptCallback;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetConfig;
 import net.runelite.api.widgets.WidgetPositionMode;
@@ -32,6 +34,12 @@ import net.runelite.client.plugins.PluginDescriptor;
 )
 public class CloseBankPlugin extends Plugin
 {
+	private enum ButtonState
+	{
+		DEFAULT,
+		HOVER
+	}
+
 	@Inject
 	private Client client;
 
@@ -43,6 +51,7 @@ public class CloseBankPlugin extends Plugin
 	private ClientThread clientThread;
 
 	private Widget closeButton = null;
+	private ButtonState buttonState = ButtonState.DEFAULT;
 
 	@Override
 	protected void startUp() throws Exception
@@ -102,6 +111,24 @@ public class CloseBankPlugin extends Plugin
 		{
 			closeBank();
 			event.consume();
+		}
+	}
+
+	private void onMouseHover(ScriptEvent e)
+	{
+		if (buttonState == ButtonState.DEFAULT)
+		{
+			buttonState = ButtonState.HOVER;
+			updateButtonSprite();
+		}
+	}
+
+	private void onMouseLeave(ScriptEvent e)
+	{
+		if (buttonState == ButtonState.HOVER)
+		{
+			buttonState = ButtonState.DEFAULT;
+			updateButtonSprite();
 		}
 	}
 
@@ -171,6 +198,13 @@ public class CloseBankPlugin extends Plugin
 		// Set action
 		closeButton.setAction(0, "Close Bank");
 		closeButton.setHasListener(true);
+
+		// Attach mouse event listeners for hover state
+		closeButton.setOnMouseOverListener((JavaScriptCallback) this::onMouseHover);
+		closeButton.setOnMouseLeaveListener((JavaScriptCallback) this::onMouseLeave);
+
+		// Reset button state when creating new button
+		buttonState = ButtonState.DEFAULT;
 
 		// Position the button based on parent dimensions
 		repositionButton();
@@ -253,6 +287,20 @@ public class CloseBankPlugin extends Plugin
 		closeButton.setOriginalY(yPositionFromBottom);
 
 		closeButton.revalidate();
+	}
+
+	private void updateButtonSprite()
+	{
+		if (closeButton == null)
+		{
+			return;
+		}
+
+		// Set sprite based on button state
+		// DEFAULT state: WINDOW_CLOSE_BUTTON (535)
+		// HOVER state: WINDOW_CLOSE_BUTTON_HOVERED (536)
+		int spriteId = buttonState == ButtonState.HOVER ? SpriteID.WINDOW_CLOSE_BUTTON_HOVERED : SpriteID.WINDOW_CLOSE_BUTTON;
+		closeButton.setSpriteId(spriteId);
 	}
 
 	@Provides
