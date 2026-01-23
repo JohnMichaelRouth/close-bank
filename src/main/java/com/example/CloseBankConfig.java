@@ -10,27 +10,14 @@ public interface CloseBankConfig extends Config
 {
 	@ConfigItem(
 		keyName = "enableCloseButton",
-		name = "Enable Close Button",
-		description = "Show a close button in the bottom right of the bank interface"
+		name = "Move Close Button",
+		description = "Move the bank close button to the bottom right of the bank interface"
 	)
 	default boolean enableCloseButton()
 	{
 		return true;
 	}
 
-	@Range(
-		min = -10,
-		max = 10
-	)
-	@ConfigItem(
-		keyName = "buttonSizeAdjustment",
-		name = "Button Size",
-		description = "Adjust the size of the close button (0 = default)"
-	)
-	default int buttonSizeAdjustment()
-	{
-		return 0;
-	}
 
 	@Range(
 		min = -20,
@@ -43,7 +30,7 @@ public interface CloseBankConfig extends Config
 	)
 	default int horizontalPaddingAdjustment()
 	{
-		return 0;
+		return 5;
 	}
 
 	@Range(
@@ -57,6 +44,6 @@ public interface CloseBankConfig extends Config
 	)
 	default int verticalPaddingAdjustment()
 	{
-		return 0;
+		return 5;
 	}
 }
