@@ -12,6 +12,7 @@ import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.ScriptPostFired;
 import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.WidgetLoaded;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
@@ -67,6 +68,15 @@ public class CloseBankPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (event.getGroup().equals("closebank"))
+		{
+			clientThread.invokeLater(this::updateButton);
+		}
+	}
+
+	@Subscribe
 	public void onScriptPostFired(ScriptPostFired event)
 	{
 		if (event.getScriptId() == ScriptID.BANKMAIN_BUILD)
@@ -118,6 +128,11 @@ public class CloseBankPlugin extends Plugin
 	{
 		if (!config.enableCloseButton())
 		{
+			// If button is disabled, hide it if it exists
+			if (closeButton != null)
+			{
+				closeButton.setHidden(true);
+			}
 			return;
 		}
 
@@ -134,8 +149,9 @@ public class CloseBankPlugin extends Plugin
 			{
 				if (dynamicChild == closeButton)
 				{
-					// Button exists, ensure it's visible
+					// Button exists, ensure it's visible and update sizing
 					closeButton.setHidden(false);
+					updateButtonDimensions();
 					repositionButton();
 					return;
 				}
@@ -147,10 +163,7 @@ public class CloseBankPlugin extends Plugin
 		// Create new close button
 		closeButton = parent.createChild(-1, WidgetType.GRAPHIC);
 
-		closeButton.setOriginalHeight(24);
-		closeButton.setOriginalWidth(26);
-		closeButton.setYPositionMode(WidgetPositionMode.ABSOLUTE_BOTTOM);
-		closeButton.setSpriteId(SpriteID.WINDOW_CLOSE_BUTTON);
+		updateButtonDimensions();
 
 		// Enable clicking - set click mask to enable action 0
 		closeButton.setClickMask(WidgetConfig.transmitAction(0));
@@ -161,6 +174,32 @@ public class CloseBankPlugin extends Plugin
 
 		// Position the button based on parent dimensions
 		repositionButton();
+	}
+
+	private void updateButtonDimensions()
+	{
+		if (closeButton == null)
+		{
+			return;
+		}
+
+		// Default dimensions
+		int baseWidth = 26;
+		int baseHeight = 24;
+
+		// Apply size adjustment (user can increase/decrease in increments)
+		int sizeAdjustment = config.buttonSizeAdjustment();
+		int width = baseWidth + (sizeAdjustment * 2); // *2 to make adjustments more visible
+		int height = baseHeight + (sizeAdjustment * 2);
+
+		// Ensure minimum size
+		width = Math.max(width, 16);
+		height = Math.max(height, 16);
+
+		closeButton.setOriginalHeight(height);
+		closeButton.setOriginalWidth(width);
+		closeButton.setYPositionMode(WidgetPositionMode.ABSOLUTE_BOTTOM);
+		closeButton.setSpriteId(SpriteID.WINDOW_CLOSE_BUTTON);
 	}
 
 	private void repositionButton()
@@ -199,11 +238,15 @@ public class CloseBankPlugin extends Plugin
 		}
 
 		// Add spacing above the bottom widgets
-		int yPositionFromBottom = bottomOffset + 2;
+		int baseVerticalPadding = 2;
+		int verticalPadding = baseVerticalPadding + config.verticalPaddingAdjustment();
+		int yPositionFromBottom = bottomOffset + verticalPadding;
 
 		// Position button at bottom right
 		// X position: right edge with spacing (for ABSOLUTE positioning, calculate from left)
-		int xPos = parent.getWidth() - closeButton.getWidth() - 20;
+		int baseHorizontalPadding = 20;
+		int horizontalPadding = baseHorizontalPadding + config.horizontalPaddingAdjustment();
+		int xPos = parent.getWidth() - closeButton.getWidth() - horizontalPadding;
 		closeButton.setOriginalX(xPos);
 
 		// Y position: using ABSOLUTE_BOTTOM, this is distance from the bottom
