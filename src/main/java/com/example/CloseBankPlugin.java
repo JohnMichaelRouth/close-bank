@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.ScriptID;
+import net.runelite.api.SpriteID;
 import net.runelite.api.WidgetNode;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.ScriptPostFired;
@@ -20,7 +21,6 @@ import net.runelite.api.widgets.WidgetType;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
@@ -37,8 +37,6 @@ public class CloseBankPlugin extends Plugin
 	@Inject
 	private CloseBankConfig config;
 
-	@Inject
-	private SpriteManager spriteManager;
 
 	@Inject
 	private ClientThread clientThread;
@@ -48,13 +46,11 @@ public class CloseBankPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		spriteManager.addSpriteOverrides(CloseBank.values());
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		spriteManager.removeSpriteOverrides(CloseBank.values());
 		if (closeButton != null)
 		{
 			closeButton.setHidden(true);
@@ -151,10 +147,10 @@ public class CloseBankPlugin extends Plugin
 		// Create new close button
 		closeButton = parent.createChild(-1, WidgetType.GRAPHIC);
 
-		closeButton.setOriginalHeight(18);
-		closeButton.setOriginalWidth(18);
+		closeButton.setOriginalHeight(24);
+		closeButton.setOriginalWidth(26);
 		closeButton.setYPositionMode(WidgetPositionMode.ABSOLUTE_BOTTOM);
-		closeButton.setSpriteId(CloseBank.CLOSE_BUTTON.getSpriteId());
+		closeButton.setSpriteId(SpriteID.WINDOW_CLOSE_BUTTON);
 
 		// Enable clicking - set click mask to enable action 0
 		closeButton.setClickMask(WidgetConfig.transmitAction(0));
@@ -207,7 +203,7 @@ public class CloseBankPlugin extends Plugin
 
 		// Position button at bottom right
 		// X position: right edge with spacing (for ABSOLUTE positioning, calculate from left)
-		int xPos = parent.getWidth() - closeButton.getWidth() - 24;
+		int xPos = parent.getWidth() - closeButton.getWidth() - 20;
 		closeButton.setOriginalX(xPos);
 
 		// Y position: using ABSOLUTE_BOTTOM, this is distance from the bottom
