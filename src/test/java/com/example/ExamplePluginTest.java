@@ -1,9 +1,10 @@
-package com.closeBank;
+package com.example;
 
+import com.closeBank.CloseBankPlugin;
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class CloseBankPluginTest
+public class ExamplePluginTest
 {
 	public static void main(String[] args) throws Exception
 	{
