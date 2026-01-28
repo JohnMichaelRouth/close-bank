@@ -20,7 +20,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Close Bank",
+	name = "Close Bank Mover",
 	description = "Moves the close button to the bottom right of the bank interface"
 )
 public class CloseBankPlugin extends Plugin
